@@ -1,0 +1,40 @@
+button {
+    border-radius: 8px;
+    border: 1px solid transparent;
+    padding: 0.6em 1.2em;
+    font-size: 1.2rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--dark-grey);
+}
+button:hover {
+    border-color: transparent;
+}
+/*button:focus,*/
+button:focus-visible {
+    outline: 3px solid var(--white);
+}
+
+[class*="button"] {
+    margin: 5px;
+    width: 60px;
+    height: 60px;
+}
+.button--number {
+    background-color: var(--light-grey);
+}
+.button--number:active {
+    background-color: var(--medium-grey);
+}
+.button--action {
+    background-color: var(--purple);
+}
+.button--action:active {
+    background-color: var(--dark-purple);
+}
+.button--equals {
+    background-color: var(--pink);
+}
+.button--equals:active {
+    background-color: var(--dark-pink);
+}

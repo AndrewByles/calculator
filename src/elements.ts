@@ -1,6 +1,16 @@
+export const calculatorContainer = '<div id="calculator"></div>';
+
+export const buttonsContainer = '<div id="buttons"></div>'
+
 export const display = '<div id="display"></div>';
 
+export const subDisplay = `<div class="sub-display">
+    <div id="memory"></div>
+    <div id="operation-symbol"></div>
+    <div id="sub-total"></div>
+</div>`;
+
 export const button = (value: string, className: string, id?: string) => {
-    return `<button ${id ? `id="${id}"` : ''} class="${className}" type="button" value="${value}">${value}</button>`;
+    return `<button ${id ? `id="${id}"` : ''} class="${className}" type="button">${value}</button>`;
 }
 

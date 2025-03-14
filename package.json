@@ -10,6 +10,8 @@
     "test": "vitest"
   },
   "devDependencies": {
+    "@vitest/browser": "^3.0.8",
+    "playwright": "^1.51.0",
     "typescript": "~5.7.2",
     "vite": "^6.2.0",
     "vitest": "^3.0.8"

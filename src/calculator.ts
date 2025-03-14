@@ -84,9 +84,11 @@ class Calculator {
     }
 
     #handelSubTotalAndDisplay(actionType: actionTypes) {
-        if (this.#totalValue) {
+        if (this.#totalValue && this.#display.innerHTML !== '0') {
             this.#totalValue = this.#doMath();
-        } else {
+        }
+
+        if (!this.#totalValue && this.#display.innerHTML !== '0') {
             this.#totalValue = parseFloat(this.#display.innerHTML);
         }
 

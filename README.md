@@ -1,14 +1,12 @@
 # Calculator
 
----
-
 ### Getting Started
 
 Install project dependencies with `npm install`.
 
 Start the DEV server with `npm run dev`.
 
-The application will be available at http://localhost:5174.
+The application will be available at http://localhost:5173.
 
 ---
 

@@ -92,7 +92,6 @@ export default class Calculator {
 
         this.#actionType = actionType;
         this.#display.innerHTML = '0';
-        console.log(this.#totalValue);
     }
 
     #doMath(): number {

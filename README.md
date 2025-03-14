@@ -21,3 +21,7 @@ Run tests with `npm test`.
 Run `npm run build` to build the project. The compiled application with be built into the /dist directory.
 
 Preview the build with `npm run preview`, the build preview is available at http://localhost:4173/.
+
+---
+
+Application tested on Chrome v134.0.6 and MacOS Sequoia v15.3.1.

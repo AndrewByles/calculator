@@ -1,6 +1,7 @@
 const BUTTON_CLASS = 'button--number';
 const ACTION_BUTTON_CLASS = 'button--action';
 const EQUALS_BUTTON_CLASS = 'button--equals';
+const OPERACTION_BUTTON_CLASS = 'button--operation';
 
 export type Button = {
     value: string;
@@ -13,10 +14,27 @@ export enum actionTypes {
     SUBTRACT = 'subtract',
     DIVIDE = 'divide',
     MULTIPLY = 'multiply',
+    EQUALS = 'equals',
     UNKNOWN = 'unknown',
 }
 
 export const buttonValues = [{
+    value: 'AC',
+    className: OPERACTION_BUTTON_CLASS,
+    id: 'clear-all',
+},{
+    value: 'C',
+    className: OPERACTION_BUTTON_CLASS,
+    id: 'clear',
+},{
+    value: 'M&#43;/&#8722;',
+    className: OPERACTION_BUTTON_CLASS,
+    id: 'memory-add-remove',
+},{
+    value: 'MR',
+    className: OPERACTION_BUTTON_CLASS,
+    id: 'memory-recall',
+},{
     value: '7',
     className: BUTTON_CLASS,
 }, {

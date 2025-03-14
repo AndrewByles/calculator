@@ -52,6 +52,11 @@ body {
   padding: 10px;
 }
 
+#memory {
+  padding-left: 10px;
+  float: left;
+}
+
 .sub-display {
   width: 280px;
   height: 20px;
@@ -60,13 +65,14 @@ body {
   top: 20px;
 }
 
-#sub-total {
+#sub-total, #operation-symbol {
   color: var(--dark-grey);
   float: right;
   padding-right: 10px;
 }
 
 #buttons {
-  float: left;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
   width: 100%;
 }

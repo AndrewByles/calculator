@@ -12,6 +12,8 @@
   font-style: normal;
   font-variation-settings: "wdth" 100;
 
+  --orange: #db771f;
+  --dark-orange: #c26717;
   --blue: #384063;
   --purple: #a288e3;
   --dark-purple: #947bd1;
@@ -35,7 +37,8 @@ body {
   width: 320px;
   margin: 40px auto;
   background-color: var(--blue);
-  height: 450px;
+  height: 525px;
+  position: relative;
 }
 
 #display {
@@ -46,6 +49,21 @@ body {
   border-radius: 10px;
   font-size: 3rem;
   text-align: right;
+  padding: 10px;
+}
+
+.sub-display {
+  width: 280px;
+  height: 20px;
+  font-size: .8rem;
+  position: absolute;
+  top: 20px;
+}
+
+#sub-total {
+  color: var(--dark-grey);
+  float: right;
+  padding-right: 10px;
 }
 
 #buttons {

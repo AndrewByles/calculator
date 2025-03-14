@@ -1,7 +1,6 @@
 button {
     border-radius: 8px;
     border: 1px solid transparent;
-    padding: 0.6em 1.2em;
     font-size: 1.2rem;
     font-weight: 600;
     cursor: pointer;
@@ -10,7 +9,6 @@ button {
 button:hover {
     border-color: transparent;
 }
-/*button:focus,*/
 button:focus-visible {
     outline: 3px solid var(--white);
 }
@@ -19,6 +17,12 @@ button:focus-visible {
     margin: 5px;
     width: 60px;
     height: 60px;
+}
+.button--operation {
+    background-color: var(--orange);
+}
+.button--operation:active {
+    background-color: var(--dark-orange);
 }
 .button--number {
     background-color: var(--light-grey);

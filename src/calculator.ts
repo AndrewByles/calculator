@@ -4,7 +4,7 @@ import { add, subtract, divide, multiply } from './math.ts';
 
 import './styles/calculator.css'
 
-export default class Calculator {
+class Calculator {
     #buttonValues: Button[] = buttonValues;
     #calculator: HTMLDivElement = document.querySelector<HTMLDivElement>('#calculator')!;
     #buttons: HTMLDivElement = document.querySelector<HTMLDivElement>('#buttons')!;

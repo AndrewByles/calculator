@@ -14,3 +14,10 @@ export const getOperationSymbol = (actionType: actionTypes): string => {
             return '';
     }
 }
+
+export const isTooWideDisplayValue = (displayValueWidth: number, displayWidth: number): boolean =>
+    (displayValueWidth + 20) > displayWidth;
+
+export const scaleElementFontSizeAndLineHeight = (element: HTMLElement, size: number): void => {
+    element.style.fontSize = `${size}rem`;
+}

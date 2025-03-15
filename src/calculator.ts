@@ -1,15 +1,17 @@
-import {calculatorContainer, buttonsContainer, button, display, subDisplay} from './elements.ts';
+import {button, buttonsContainer, calculatorContainer, display, displayContainer, subDisplay} from './elements.ts';
 import {actionTypes, Button, buttonValues} from './button-types.ts';
-import {doMath} from './math.ts';
-import {getOperationSymbol} from './utils.ts';
+import {doMath, isNanOrInfinity} from './math.ts';
+import {getOperationSymbol, isTooWideDisplayValue, scaleElementFontSizeAndLineHeight} from './utils.ts';
 
 import './styles/calculator.css'
 
 export default class Calculator {
+    #fontSize = 3;
     #buttonValues: Button[] = buttonValues;
     #calculator: HTMLElement;
     #buttons: HTMLElement;
     #numberButtons: HTMLCollectionOf<Element>;
+    #displayContainer: HTMLElement;
 
     display: HTMLElement;
     subTotalDisplay: HTMLElement;
@@ -22,6 +24,11 @@ export default class Calculator {
     divideButton: HTMLElement;
     multiplyButton: HTMLElement;
 
+    negateButton: HTMLElement;
+    percentageButton: HTMLElement;
+    squareRootButton: HTMLElement;
+    squareButton: HTMLElement;
+
     clearAllButton: HTMLElement;
     clearButton: HTMLElement;
 
@@ -30,15 +37,15 @@ export default class Calculator {
 
     actionType: actionTypes = actionTypes.UNKNOWN;
     totalValue: number = 0;
+
     constructor() {
         document.body.innerHTML = calculatorContainer;
         this.#calculator = document.getElementById('calculator')!;
-        this.#calculator.innerHTML = subDisplay + display + buttonsContainer;
-        this.#buttons = document.getElementById('buttons')!;
+        this.#calculator.innerHTML = displayContainer + buttonsContainer;
+        this.#displayContainer = document.getElementById('display')!;
 
-        this.#buttonValues.forEach((btn) => {
-            this.#buttons.innerHTML += button(btn.value, btn.className, btn.id);
-        });
+        this.#buttons = document.getElementById('buttons')!;
+        this.#displayContainer.innerHTML = subDisplay + display;
 
         this.#buttons.innerHTML = this.#buttonValues.map((btn) => button(btn.value, btn.className, btn.id)).join('');
 
@@ -46,7 +53,7 @@ export default class Calculator {
         this.memoryDisplay = document.getElementById('memory')!;
         this.subTotalDisplay = document.getElementById('sub-total')!;
         this.operationSymbol = document.getElementById('operation-symbol')!;
-        this.display = document.getElementById('display')!;
+        this.display = document.getElementById('display-value')!;
         this.display.innerHTML = '0';
 
         this.equalsButton = document.getElementById('equals')!;
@@ -54,6 +61,11 @@ export default class Calculator {
         this.subtractButton = document.getElementById('subtract')!;
         this.divideButton = document.getElementById('divide')!;
         this.multiplyButton = document.getElementById('multiply')!;
+
+        this.negateButton = document.getElementById('negate')!;
+        this.percentageButton = document.getElementById('percentage')!;
+        this.squareRootButton = document.getElementById('square-root')!;
+        this.squareButton = document.getElementById('square')!;
 
         this.clearAllButton = document.getElementById('clear-all')!;
         this.clearButton = document.getElementById('clear')!;
@@ -66,27 +78,29 @@ export default class Calculator {
 
     #setupButtons() {
         this.#setupNumberButtons();
-        this.#setupActionButton(this.addButton, actionTypes.ADD);
-        this.#setupActionButton(this.subtractButton, actionTypes.SUBTRACT);
-        this.#setupActionButton(this.divideButton, actionTypes.DIVIDE);
-        this.#setupActionButton(this.multiplyButton, actionTypes.MULTIPLY);
+        this.#setupActionButtons();
+        this.#setupSecondaryActionButtons();
         this.#setupEqualsButton();
-        this.#setupClearButton(this.clearAllButton, true);
-        this.#setupClearButton(this.clearButton, false);
-        this.#setupMemoryAddRemoveButton();
-        this.#setupMemoryRecallButton();
+        this.#setupClearButtons();
+        this.#setupMemoryButtons();
     }
 
     #setupNumberButtons() {
         Array.from(this.#numberButtons).forEach((btn: Element) => {
             btn.addEventListener('click', () => {
-
                 const isPreviousEquals = this.actionType === actionTypes.EQUALS;
+                // this.actionType === actionTypes.NEGATE ||
+                const isSecondaryAction =
+                    this.actionType === actionTypes.PERCENTAGE ||
+                    this.actionType === actionTypes.SQUARE_ROOT ||
+                    this.actionType === actionTypes.SQUARE;
                 const isDecimal = btn.innerHTML === '.';
                 const isAlreadyDecimal = this.display.innerHTML.includes('.');
                 const isZero = this.display.innerHTML === '0';
 
-                console.log(isPreviousEquals, isZero, isDecimal, isAlreadyDecimal)
+                if (this.display.innerHTML.length >= 15) {
+                    return;
+                }
 
                 if (isPreviousEquals && isDecimal) {
                     this.#updateDisplay('0.');
@@ -94,7 +108,7 @@ export default class Calculator {
                     return;
                 }
 
-                if (isPreviousEquals) {
+                if (isPreviousEquals || isSecondaryAction) {
                     this.#updateDisplay(btn.innerHTML);
                     this.actionType = actionTypes.UNKNOWN;
                     return;
@@ -114,42 +128,86 @@ export default class Calculator {
                         ? btn.innerHTML
                         : this.display.innerHTML + btn.innerHTML
                 );
+
+                this.#setFontSizeScale();
             });
         });
     }
 
-    #setupActionButton(button: HTMLElement, actionType: actionTypes) {
-        button.addEventListener('click', () => {
-            console.log(button.innerHTML);
-            this.#handelSubTotalAndDisplay(actionType);
+    #setupActionButtons() {
+        [this.addButton, this.subtractButton, this.divideButton, this.multiplyButton].forEach((button, index) => {
+            button.addEventListener('click', () => {
+                this.#handelSubTotalAndDisplay(Object.values(actionTypes)[index]);
+                this.#resetFontSize();
+            });
+        });
+    }
+
+    #setupSecondaryActionButtons() {
+        [this.negateButton, this.percentageButton, this.squareRootButton, this.squareButton].forEach((button, index) => {
+            button.addEventListener('click', () => {
+                const actionType = Object.values(actionTypes)[index + 5];
+                const result = doMath(actionType, parseFloat(this.display.innerHTML));
+                this.#updateDisplay(isNanOrInfinity(result) ? 'error' : result.toString());
+                this.#resetFontSize();
+
+                if (actionType !== actionTypes.NEGATE) {
+                    this.actionType = actionType;
+                }
+            });
         });
     }
 
     #setupEqualsButton() {
         this.equalsButton.addEventListener('click', () => {
-            console.log(this.totalValue, parseFloat(this.display.innerHTML))
-            if (this.totalValue > 0) {
-                console.log('here', this.actionType);
+            if (this.totalValue !== 0) {
                 const result = doMath(this.actionType, this.totalValue, parseFloat(this.display.innerHTML));
-                this.#updateDisplay(result === Infinity ? 'error' : result.toString());
+                this.#updateDisplay(isNanOrInfinity(result) ? 'error' : result.toString());
             }
             this.actionType = actionTypes.EQUALS;
             this.subTotalDisplay.innerHTML = '';
             this.operationSymbol.innerHTML = '';
             this.totalValue = 0;
+            this.#resetFontSize();
         });
     }
 
-    #setupClearButton(button: HTMLElement, clearAll: boolean) {
-        button.addEventListener('click', () => {
-            this.#updateDisplay('0');
-            if (clearAll) {
-                this.actionType = actionTypes.UNKNOWN;
-                this.subTotalDisplay.innerHTML = '';
-                this.operationSymbol.innerHTML = '';
-                this.memoryDisplay.innerHTML = '';
-                this.totalValue = 0;
+    #setupClearButtons() {
+        [this.clearAllButton, this.clearButton].forEach((button, index) => {
+            button.addEventListener('click', () => {
+                this.#updateDisplay('0');
+                this.#resetFontSize();
+                if (index === 0) {
+                    this.actionType = actionTypes.UNKNOWN;
+                    this.subTotalDisplay.innerHTML = '';
+                    this.operationSymbol.innerHTML = '';
+                    this.memoryDisplay.innerHTML = '';
+                    this.totalValue = 0;
+                }
+            });
+        });
+    }
+
+    #setupMemoryButtons() {
+        this.memoryAddremoveButton.addEventListener('click', () => {
+            if (this.memoryDisplay.innerHTML === '' || this.display.innerHTML !== '0') {
+                this.memoryDisplay.innerHTML = `M ${parseFloat(this.display.innerHTML)}`;
+                this.#updateDisplay('0');
+                this.#resetFontSize();
+                return;
             }
+
+            this.memoryDisplay.innerHTML = '';
+        });
+
+        this.memoryRecallButton.addEventListener('click', () => {
+            if (this.memoryDisplay.innerHTML === '') {
+                return;
+            }
+
+            const memoryValue = this.memoryDisplay.innerHTML.split(' ')[1];
+            this.#updateDisplay(memoryValue);
+            this.#setFontSizeScale();
         });
     }
 
@@ -170,27 +228,18 @@ export default class Calculator {
         this.#updateDisplay('0');
     }
 
-    #setupMemoryAddRemoveButton() {
-        this.memoryAddremoveButton.addEventListener('click', () => {
-            if (this.memoryDisplay.innerHTML === '' || this.display.innerHTML !== '0') {
-                this.memoryDisplay.innerHTML = `M ${this.display.innerHTML}`;
-                this.#updateDisplay('0');
-                return;
-            }
-
-            this.memoryDisplay.innerHTML = '';
-        })
+    #setFontSizeScale() {
+        if (isTooWideDisplayValue(this.display.offsetWidth, this.#displayContainer.offsetWidth)) {
+            this.#fontSize = (this.#displayContainer.offsetWidth / (this.display.offsetWidth + 40)) * this.#fontSize;
+            scaleElementFontSizeAndLineHeight(this.display, this.#fontSize);
+            return;
+        }
     }
 
-    #setupMemoryRecallButton() {
-        this.memoryRecallButton.addEventListener('click', () => {
-            if (this.memoryDisplay.innerHTML === '') {
-                return;
-            }
-
-            const memoryValue = this.memoryDisplay.innerHTML.split(' ')[1];
-            this.#updateDisplay(memoryValue);
-        })
+    #resetFontSize() {
+        this.#fontSize = 3;
+        scaleElementFontSizeAndLineHeight(this.display, this.#fontSize);
+        this.#setFontSizeScale();
     }
 }
 

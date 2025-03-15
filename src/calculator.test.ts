@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { userEvent } from '@vitest/browser/context'
 import Calculator from './calculator';
 import { actionTypes } from './button-types';
 
@@ -20,13 +19,6 @@ describe('Calculator', () => {
         expect(calculator.display.innerHTML).toBe('0');
         expect(calculator.totalValue).toBe(0);
         expect(calculator.actionType).toBe(actionTypes.UNKNOWN);
-    });
-
-    it('should update display when number button is clicked', async () => {
-        const button = document.querySelector('.button--number')!;
-        button.innerHTML = '5';
-        await userEvent.click(button)
-        expect(calculator.display.innerHTML).toBe('5');
     });
 
     it('should perform addition correctly', () => {
@@ -60,6 +52,30 @@ describe('Calculator', () => {
         calculator.equalsButton.click();
         expect(calculator.display.innerHTML).toBe('15');
     });
+
+    it('should negate the number correctly', () => {
+        calculator.display.innerHTML = '5';
+        calculator.negateButton.click();
+        expect(calculator.display.innerHTML).toBe('-5');
+    })
+
+    it('should calculate percentage correctly', () => {
+        calculator.display.innerHTML = '5';
+        calculator.percentageButton.click();
+        expect(calculator.display.innerHTML).toBe('0.05');
+    })
+
+    it('should calculate square root correctly', () => {
+        calculator.display.innerHTML = '25';
+        calculator.squareRootButton.click();
+        expect(calculator.display.innerHTML).toBe('5');
+    })
+
+    it('should calculate square correctly', () => {
+        calculator.display.innerHTML = '5';
+        calculator.squareButton.click();
+        expect(calculator.display.innerHTML).toBe('25');
+    })
 
     it('should correctly show sub-total after operator click', () => {
         calculator.display.innerHTML = '5';

@@ -2,7 +2,9 @@ export const calculatorContainer = '<div id="calculator"></div>';
 
 export const buttonsContainer = '<div id="buttons"></div>'
 
-export const display = '<div id="display"></div>';
+export const displayContainer = '<div id="display"></div>';
+
+export const display = '<div id="display-value"></div>';
 
 export const subDisplay = `<div class="sub-display">
     <div id="memory"></div>

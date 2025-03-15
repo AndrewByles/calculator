@@ -10,7 +10,7 @@ export default class Calculator {
     #buttonValues: Button[] = buttonValues;
     #calculator: HTMLElement;
     #buttons: HTMLElement;
-    #numberButtons: HTMLCollectionOf<Element>;
+    numberButtons: HTMLCollectionOf<Element>;
     #displayContainer: HTMLElement;
 
     display: HTMLElement;
@@ -49,7 +49,7 @@ export default class Calculator {
 
         this.#buttons.innerHTML = this.#buttonValues.map((btn) => button(btn.value, btn.className, btn.id)).join('');
 
-        this.#numberButtons = document.getElementsByClassName('button--number');
+        this.numberButtons = document.getElementsByClassName('button--number');
         this.memoryDisplay = document.getElementById('memory')!;
         this.subTotalDisplay = document.getElementById('sub-total')!;
         this.operationSymbol = document.getElementById('operation-symbol')!;
@@ -86,7 +86,7 @@ export default class Calculator {
     }
 
     #setupNumberButtons() {
-        Array.from(this.#numberButtons).forEach((btn: Element) => {
+        Array.from(this.numberButtons).forEach((btn: Element) => {
             btn.addEventListener('click', () => {
                 const isPreviousEquals = this.actionType === actionTypes.EQUALS;
                 const isSecondaryAction =

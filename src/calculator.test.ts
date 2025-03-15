@@ -21,6 +21,11 @@ describe('Calculator', () => {
         expect(calculator.actionType).toBe(actionTypes.UNKNOWN);
     });
 
+    it('should update display when number button is clicked', async () => {
+        calculator.numberButtons[0].dispatchEvent(new MouseEvent('click'));
+        expect(calculator.display.innerHTML).toBe('7');
+    });
+
     it('should perform addition correctly', () => {
         calculator.totalValue = 5;
         calculator.addButton.click();

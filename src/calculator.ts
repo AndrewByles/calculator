@@ -284,8 +284,6 @@ export default class Calculator {
         });
 
         window.addEventListener('keydown', (e) => {
-            console.log(e.key, e.code);
-
             if (numberButtonKeyCodes.includes(e.code)) {
                 const btn =
                     Array.from(this.numberButtons).find((b) => b.innerHTML === e.key);

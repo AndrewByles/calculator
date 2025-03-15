@@ -18,18 +18,21 @@ button:focus-visible {
     width: 60px;
     height: 60px;
 }
+
 .button--operation {
     background-color: var(--orange);
 }
 .button--operation:active {
     background-color: var(--dark-orange);
 }
+
 .button--number {
     background-color: var(--light-grey);
 }
 .button--number:active {
     background-color: var(--medium-grey);
 }
+
 .button--action {
     background-color: var(--purple);
     font-size: 2rem;
@@ -37,6 +40,15 @@ button:focus-visible {
 .button--action:active {
     background-color: var(--dark-purple);
 }
+
+.button--action-secondary {
+    background-color: var(--light-blue);
+    font-size: 1.8rem;
+}
+.button--action-secondary:active {
+    background-color: var(--blue);
+}
+
 .button--equals {
     background-color: var(--pink);
 }

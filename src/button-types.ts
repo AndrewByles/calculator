@@ -1,5 +1,6 @@
 const BUTTON_CLASS = 'button--number';
 const ACTION_BUTTON_CLASS = 'button--action';
+const ACTION_SECONDARY_BUTTON_CLASS = 'button--action-secondary';
 const EQUALS_BUTTON_CLASS = 'button--equals';
 const OPERACTION_BUTTON_CLASS = 'button--operation';
 
@@ -15,6 +16,10 @@ export enum actionTypes {
     DIVIDE = 'divide',
     MULTIPLY = 'multiply',
     EQUALS = 'equals',
+    NEGATE = 'negate',
+    PERCENTAGE = 'percentage',
+    SQUARE_ROOT = 'square-root',
+    SQUARE = 'square',
     UNKNOWN = 'unknown',
 }
 
@@ -34,6 +39,22 @@ export const buttonValues = [{
     value: 'MR',
     className: OPERACTION_BUTTON_CLASS,
     id: 'memory-recall',
+},{
+    value: '&#43;/&#8722;',
+    className: ACTION_SECONDARY_BUTTON_CLASS,
+    id: 'negate',
+},{
+    value: '&#37;',
+    className: ACTION_SECONDARY_BUTTON_CLASS,
+    id: 'percentage',
+},{
+    value: '&#8730;',
+    className: ACTION_SECONDARY_BUTTON_CLASS,
+    id: 'square-root',
+},{
+    value: 'x&#178;',
+    className: ACTION_SECONDARY_BUTTON_CLASS,
+    id: 'square',
 },{
     value: '7',
     className: BUTTON_CLASS,

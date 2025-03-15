@@ -89,7 +89,6 @@ export default class Calculator {
         Array.from(this.#numberButtons).forEach((btn: Element) => {
             btn.addEventListener('click', () => {
                 const isPreviousEquals = this.actionType === actionTypes.EQUALS;
-                // this.actionType === actionTypes.NEGATE ||
                 const isSecondaryAction =
                     this.actionType === actionTypes.PERCENTAGE ||
                     this.actionType === actionTypes.SQUARE_ROOT ||

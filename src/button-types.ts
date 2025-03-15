@@ -23,6 +23,11 @@ export enum actionTypes {
     UNKNOWN = 'unknown',
 }
 
+export type ButtonAndAction = {
+    button: Element;
+    action: actionTypes;
+}
+
 export const buttonValues = [{
     value: 'AC',
     className: OPERACTION_BUTTON_CLASS,

@@ -1,7 +1,13 @@
 import {button, buttonsContainer, calculatorContainer, display, displayContainer, subDisplay} from './elements.ts';
-import {actionTypes, Button, buttonValues} from './button-types.ts';
+import {actionTypes, Button, ButtonAndAction, buttonValues} from './button-types.ts';
 import {doMath, isNanOrInfinity} from './math.ts';
-import {getOperationSymbol, isTooWideDisplayValue, scaleElementFontSizeAndLineHeight} from './utils.ts';
+import {
+    actionButtonKeyCodes, getActionTypeFromKeyCode,
+    getOperationSymbol,
+    isTooWideDisplayValue,
+    numberButtonKeyCodes,
+    scaleElementFontSizeAndLineHeight
+} from './utils.ts';
 
 import './styles/calculator.css'
 
@@ -73,141 +79,112 @@ export default class Calculator {
         this.memoryAddremoveButton = document.getElementById('memory-add-remove')!;
         this.memoryRecallButton = document.getElementById('memory-recall')!;
 
-        this.#setupButtons();
+        this.#initCalculatorEventHandling();
     }
 
-    #setupButtons() {
-        this.#setupNumberButtons();
-        this.#setupActionButtons();
-        this.#setupSecondaryActionButtons();
-        this.#setupEqualsButton();
-        this.#setupClearButtons();
-        this.#setupMemoryButtons();
+    #buttonEvent(button: Element) {
+        const isPreviousEquals = this.actionType === actionTypes.EQUALS;
+        const isSecondaryAction =
+            this.actionType === actionTypes.PERCENTAGE ||
+            this.actionType === actionTypes.SQUARE_ROOT ||
+            this.actionType === actionTypes.SQUARE;
+        const isDecimal = button.innerHTML === '.';
+        const isAlreadyDecimal = this.display.innerHTML.includes('.');
+        const isZero = this.display.innerHTML === '0';
+
+        if (this.display.innerHTML.length >= 15) {
+            return;
+        }
+
+        if (isPreviousEquals && isDecimal) {
+            this.#updateDisplay('0.');
+            this.actionType = actionTypes.UNKNOWN;
+            return;
+        }
+
+        if (isPreviousEquals || isSecondaryAction) {
+            this.#updateDisplay(button.innerHTML);
+            this.actionType = actionTypes.UNKNOWN;
+            return;
+        }
+
+        if (isZero && isDecimal) {
+            this.#updateDisplay('0.');
+            return;
+        }
+
+        if (isDecimal && isAlreadyDecimal) {
+            return;
+        }
+
+        this.#updateDisplay(
+            this.display.innerHTML === '0' || this.display.innerHTML === 'error'
+                ? button.innerHTML
+                : this.display.innerHTML + button.innerHTML
+        );
+
+        this.#setFontSizeScale();
     }
 
-    #setupNumberButtons() {
-        Array.from(this.numberButtons).forEach((btn: Element) => {
-            btn.addEventListener('click', () => {
-                const isPreviousEquals = this.actionType === actionTypes.EQUALS;
-                const isSecondaryAction =
-                    this.actionType === actionTypes.PERCENTAGE ||
-                    this.actionType === actionTypes.SQUARE_ROOT ||
-                    this.actionType === actionTypes.SQUARE;
-                const isDecimal = btn.innerHTML === '.';
-                const isAlreadyDecimal = this.display.innerHTML.includes('.');
-                const isZero = this.display.innerHTML === '0';
-
-                if (this.display.innerHTML.length >= 15) {
-                    return;
-                }
-
-                if (isPreviousEquals && isDecimal) {
-                    this.#updateDisplay('0.');
-                    this.actionType = actionTypes.UNKNOWN;
-                    return;
-                }
-
-                if (isPreviousEquals || isSecondaryAction) {
-                    this.#updateDisplay(btn.innerHTML);
-                    this.actionType = actionTypes.UNKNOWN;
-                    return;
-                }
-
-                if (isZero && isDecimal) {
-                    this.#updateDisplay('0.');
-                    return;
-                }
-
-                if (isDecimal && isAlreadyDecimal) {
-                    return;
-                }
-
-                this.#updateDisplay(
-                    this.display.innerHTML === '0' || this.display.innerHTML === 'error'
-                        ? btn.innerHTML
-                        : this.display.innerHTML + btn.innerHTML
-                );
-
-                this.#setFontSizeScale();
-            });
-        });
+    #actionButtonEvent (actionType: actionTypes) {
+        this.#handelSubTotalAndDisplay(actionType);
+        this.#resetFontSize();
     }
 
-    #setupActionButtons() {
-        [this.addButton, this.subtractButton, this.divideButton, this.multiplyButton].forEach((button, index) => {
-            button.addEventListener('click', () => {
-                this.#handelSubTotalAndDisplay(Object.values(actionTypes)[index]);
-                this.#resetFontSize();
-            });
-        });
+    #secondaryActionButtonEvent(actionType: actionTypes) {
+        const result = doMath(actionType, parseFloat(this.display.innerHTML));
+        this.#updateDisplay(isNanOrInfinity(result) ? 'error' : result.toString());
+        this.#resetFontSize();
+
+        if (actionType !== actionTypes.NEGATE) {
+            this.actionType = actionType;
+        }
     }
 
-    #setupSecondaryActionButtons() {
-        [this.negateButton, this.percentageButton, this.squareRootButton, this.squareButton].forEach((button, index) => {
-            button.addEventListener('click', () => {
-                const actionType = Object.values(actionTypes)[index + 5];
-                const result = doMath(actionType, parseFloat(this.display.innerHTML));
-                this.#updateDisplay(isNanOrInfinity(result) ? 'error' : result.toString());
-                this.#resetFontSize();
-
-                if (actionType !== actionTypes.NEGATE) {
-                    this.actionType = actionType;
-                }
-            });
-        });
+    #equalsButtonEvent() {
+        if (this.totalValue !== 0) {
+            const result = doMath(this.actionType, this.totalValue, parseFloat(this.display.innerHTML));
+            this.#updateDisplay(isNanOrInfinity(result) ? 'error' : result.toString());
+        }
+        this.actionType = actionTypes.EQUALS;
+        this.subTotalDisplay.innerHTML = '';
+        this.operationSymbol.innerHTML = '';
+        this.totalValue = 0;
+        this.#resetFontSize();
     }
 
-    #setupEqualsButton() {
-        this.equalsButton.addEventListener('click', () => {
-            if (this.totalValue !== 0) {
-                const result = doMath(this.actionType, this.totalValue, parseFloat(this.display.innerHTML));
-                this.#updateDisplay(isNanOrInfinity(result) ? 'error' : result.toString());
-            }
-            this.actionType = actionTypes.EQUALS;
+    #clearButtonEvent(isClearAll: boolean) {
+        this.#updateDisplay('0');
+        this.#resetFontSize();
+
+        if(isClearAll){
             this.subTotalDisplay.innerHTML = '';
             this.operationSymbol.innerHTML = '';
-            this.totalValue = 0;
-            this.#resetFontSize();
-        });
-    }
-
-    #setupClearButtons() {
-        [this.clearAllButton, this.clearButton].forEach((button, index) => {
-            button.addEventListener('click', () => {
-                this.#updateDisplay('0');
-                this.#resetFontSize();
-                if (index === 0) {
-                    this.actionType = actionTypes.UNKNOWN;
-                    this.subTotalDisplay.innerHTML = '';
-                    this.operationSymbol.innerHTML = '';
-                    this.memoryDisplay.innerHTML = '';
-                    this.totalValue = 0;
-                }
-            });
-        });
-    }
-
-    #setupMemoryButtons() {
-        this.memoryAddremoveButton.addEventListener('click', () => {
-            if (this.memoryDisplay.innerHTML === '' || this.display.innerHTML !== '0') {
-                this.memoryDisplay.innerHTML = `M ${parseFloat(this.display.innerHTML)}`;
-                this.#updateDisplay('0');
-                this.#resetFontSize();
-                return;
-            }
-
             this.memoryDisplay.innerHTML = '';
-        });
+            this.totalValue = 0;
+            this.actionType = actionTypes.UNKNOWN;
+        }
+    }
 
-        this.memoryRecallButton.addEventListener('click', () => {
-            if (this.memoryDisplay.innerHTML === '') {
-                return;
-            }
+    #memoryAddremoveButtonEvent() {
+        if (this.memoryDisplay.innerHTML === '' || this.display.innerHTML !== '0') {
+            this.memoryDisplay.innerHTML = `M ${parseFloat(this.display.innerHTML)}`;
+            this.#updateDisplay('0');
+            this.#resetFontSize();
+            return;
+        }
 
-            const memoryValue = this.memoryDisplay.innerHTML.split(' ')[1];
-            this.#updateDisplay(memoryValue);
-            this.#setFontSizeScale();
-        });
+        this.memoryDisplay.innerHTML = '';
+    }
+
+    #memoryRecallButtonEvent() {
+        if (this.memoryDisplay.innerHTML === '') {
+            return;
+        }
+
+        const memoryValue = this.memoryDisplay.innerHTML.split(' ')[1];
+        this.#updateDisplay(memoryValue);
+        this.#setFontSizeScale();
     }
 
     #updateDisplay(value: string) {
@@ -238,6 +215,101 @@ export default class Calculator {
         this.#fontSize = 3;
         scaleElementFontSizeAndLineHeight(this.display, this.#fontSize);
         this.#setFontSizeScale();
+    }
+
+    #initCalculatorEventHandling() {
+        Array.from(this.numberButtons).forEach((btn: Element) => {
+            btn.addEventListener('click', () => {
+                this.#buttonEvent(btn);
+            });
+        });
+
+        const actionButtonAndAction: ButtonAndAction[] = [{
+            button: this.addButton,
+            action: actionTypes.ADD,
+        }, {
+            button: this.subtractButton,
+            action: actionTypes.SUBTRACT,
+        }, {
+            button: this.divideButton,
+            action: actionTypes.DIVIDE,
+        }, {
+            button: this.multiplyButton,
+            action: actionTypes.MULTIPLY,
+        }];
+
+        actionButtonAndAction.forEach(({ button, action }) => {
+            button.addEventListener('click', () => {
+                this.#actionButtonEvent(action);
+            });
+        });
+
+        const secondaryActionButtonsAndActions: ButtonAndAction[] = [{
+            button: this.negateButton,
+            action: actionTypes.NEGATE,
+        }, {
+            button: this.percentageButton,
+            action: actionTypes.PERCENTAGE,
+        }, {
+            button: this.squareRootButton,
+            action: actionTypes.SQUARE_ROOT,
+        }, {
+            button: this.squareButton,
+            action: actionTypes.SQUARE,
+        }]
+
+        secondaryActionButtonsAndActions.forEach(({ button, action }) => {
+            button.addEventListener('click', () => {
+                this.#secondaryActionButtonEvent(action);
+            });
+        });
+
+        this.equalsButton.addEventListener('click', () => {
+            this.#equalsButtonEvent();
+        });
+
+
+        [this.clearAllButton, this.clearButton].forEach((button, index) => {
+            button.addEventListener('click', () => {
+                this.#clearButtonEvent(index === 0);
+            });
+        });
+
+        this.memoryAddremoveButton.addEventListener('click', () => {
+            this.#memoryAddremoveButtonEvent();
+        });
+
+        this.memoryRecallButton.addEventListener('click', () => {
+            this.#memoryRecallButtonEvent();
+        });
+
+        window.addEventListener('keydown', (e) => {
+            console.log(e.key, e.code);
+
+            if (numberButtonKeyCodes.includes(e.code)) {
+                const btn =
+                    Array.from(this.numberButtons).find((b) => b.innerHTML === e.key);
+                if (btn) {
+                    this.#buttonEvent(btn);
+                }
+            }
+
+            if (actionButtonKeyCodes.includes(e.code)) {
+                this.#actionButtonEvent(getActionTypeFromKeyCode(e.code));
+            }
+
+            if (e.code === 'Enter' || e.code == 'NumpadEnter') {
+                this.#equalsButtonEvent();
+            }
+
+            if (e.code === 'Backspace') {
+                this.#clearButtonEvent(false);
+            }
+
+            if (e.code === 'Escape') {
+                this.#clearButtonEvent(true);
+            }
+        });
     }
 }
 

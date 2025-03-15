@@ -231,7 +231,6 @@ export default class Calculator {
         if (isTooWideDisplayValue(this.display.offsetWidth, this.#displayContainer.offsetWidth)) {
             this.#fontSize = (this.#displayContainer.offsetWidth / (this.display.offsetWidth + 40)) * this.#fontSize;
             scaleElementFontSizeAndLineHeight(this.display, this.#fontSize);
-            return;
         }
     }
 

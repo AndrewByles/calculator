@@ -1,83 +1,33 @@
-import {button, buttonsContainer, calculatorContainer, display, displayContainer, subDisplay} from './elements.ts';
-import {actionTypes, Button, ButtonAndAction, buttonValues} from './button-types.ts';
+import {buttonsContainer, calculatorContainer, displayContainer} from './elements.ts';
+import {actionTypes, ButtonAndAction} from './button-types.ts';
 import {doMath, isNanOrInfinity} from './math.ts';
 import {
     actionButtonKeyCodes, getActionTypeFromKeyCode,
     getOperationSymbol,
-    isTooWideDisplayValue,
     numberButtonKeyCodes,
-    scaleElementFontSizeAndLineHeight
 } from './utils.ts';
 
 import './styles/calculator.css'
+import {Display} from "./display.ts";
+import {Buttons} from "./buttons.ts";
 
 export default class Calculator {
-    #fontSize = 3;
-    #buttonValues: Button[] = buttonValues;
     #calculator: HTMLElement;
-    #buttons: HTMLElement;
-    numberButtons: HTMLCollectionOf<Element>;
-    #displayContainer: HTMLElement;
-
-    display: HTMLElement;
-    subTotalDisplay: HTMLElement;
-    operationSymbol: HTMLElement;
-    memoryDisplay: HTMLElement;
-
-    equalsButton: HTMLElement;
-    addButton: HTMLElement;
-    subtractButton: HTMLElement;
-    divideButton: HTMLElement;
-    multiplyButton: HTMLElement;
-
-    negateButton: HTMLElement;
-    percentageButton: HTMLElement;
-    squareRootButton: HTMLElement;
-    squareButton: HTMLElement;
-
-    clearAllButton: HTMLElement;
-    clearButton: HTMLElement;
-
-    memoryAddremoveButton: HTMLElement;
-    memoryRecallButton: HTMLElement;
+    display: Display;
+    buttons: Buttons;
 
     actionType: actionTypes = actionTypes.UNKNOWN;
-    totalValue: number = 0;
+    subTotalValue: number = 0;
+    displayValue: number = 0;
+    memoryValue: number = 0;
 
     constructor() {
         document.body.innerHTML = calculatorContainer;
         this.#calculator = document.getElementById('calculator')!;
         this.#calculator.innerHTML = displayContainer + buttonsContainer;
-        this.#displayContainer = document.getElementById('display')!;
 
-        this.#buttons = document.getElementById('buttons')!;
-        this.#displayContainer.innerHTML = subDisplay + display;
-
-        this.#buttons.innerHTML = this.#buttonValues.map((btn) => button(btn.value, btn.className, btn.id)).join('');
-
-        this.numberButtons = document.getElementsByClassName('button--number');
-        this.memoryDisplay = document.getElementById('memory')!;
-        this.subTotalDisplay = document.getElementById('sub-total')!;
-        this.operationSymbol = document.getElementById('operation-symbol')!;
-        this.display = document.getElementById('display-value')!;
-        this.display.innerHTML = '0';
-
-        this.equalsButton = document.getElementById('equals')!;
-        this.addButton = document.getElementById('add')!;
-        this.subtractButton = document.getElementById('subtract')!;
-        this.divideButton = document.getElementById('divide')!;
-        this.multiplyButton = document.getElementById('multiply')!;
-
-        this.negateButton = document.getElementById('negate')!;
-        this.percentageButton = document.getElementById('percentage')!;
-        this.squareRootButton = document.getElementById('square-root')!;
-        this.squareButton = document.getElementById('square')!;
-
-        this.clearAllButton = document.getElementById('clear-all')!;
-        this.clearButton = document.getElementById('clear')!;
-
-        this.memoryAddremoveButton = document.getElementById('memory-add-remove')!;
-        this.memoryRecallButton = document.getElementById('memory-recall')!;
+        this.display = new Display();
+        this.buttons = new Buttons();
 
         this.#initCalculatorEventHandling();
     }
@@ -89,52 +39,59 @@ export default class Calculator {
             this.actionType === actionTypes.SQUARE_ROOT ||
             this.actionType === actionTypes.SQUARE;
         const isDecimal = button.innerHTML === '.';
-        const isAlreadyDecimal = this.display.innerHTML.includes('.');
-        const isZero = this.display.innerHTML === '0';
+        const isAlreadyDecimal = this.display.getDisplayValue().includes('.');
+        const isZero = this.display.getDisplayValue() === '0';
 
-        if (this.display.innerHTML.length >= 15) {
+        if (this.display.getDisplayValue().length >= 15 || (!isPreviousEquals && isDecimal && isAlreadyDecimal)) {
             return;
         }
 
-        if (isPreviousEquals && isDecimal) {
-            this.#updateDisplay('0.');
-            this.actionType = actionTypes.UNKNOWN;
+        if (isDecimal && (isPreviousEquals || isZero)) {
+            if (isPreviousEquals) {
+                this.actionType = actionTypes.UNKNOWN;
+            }
+            this.display.updateDisplay('0.');
             return;
         }
 
         if (isPreviousEquals || isSecondaryAction) {
-            this.#updateDisplay(button.innerHTML);
+            this.display.updateDisplay(button.innerHTML);
+            this.displayValue = parseFloat(button.innerHTML);
             this.actionType = actionTypes.UNKNOWN;
             return;
         }
 
-        if (isZero && isDecimal) {
-            this.#updateDisplay('0.');
+        if (this.displayValue === 0 || isNanOrInfinity(this.displayValue)) {
+            this.displayValue = parseFloat(button.innerHTML);
+            this.display.updateDisplay(button.innerHTML);
             return;
         }
 
-        if (isDecimal && isAlreadyDecimal) {
-            return;
-        }
-
-        this.#updateDisplay(
-            this.display.innerHTML === '0' || this.display.innerHTML === 'error'
-                ? button.innerHTML
-                : this.display.innerHTML + button.innerHTML
-        );
-
-        this.#setFontSizeScale();
+        this.displayValue = parseFloat(this.display.getDisplayValue() + button.innerHTML);
+        this.display.updateDisplay(this.display.getDisplayValue() + button.innerHTML);
     }
 
     #actionButtonEvent (actionType: actionTypes) {
-        this.#handelSubTotalAndDisplay(actionType);
-        this.#resetFontSize();
+        if (this.subTotalValue !== 0 && this.displayValue !== 0) {
+            this.subTotalValue = doMath(this.actionType, this.subTotalValue, this.displayValue);
+        } else if (this.subTotalValue === 0 && this.displayValue !== 0) {
+            this.subTotalValue = this.displayValue;
+        }
+
+        this.actionType = actionType;
+        this.display.updateSubTotalDisplay(this.subTotalValue.toString());
+        this.display.updateOperationSymbol(getOperationSymbol(this.actionType));
+        this.display.resetFontSize();
+        this.display.updateDisplay('0');
+        this.displayValue = 0;
     }
 
     #secondaryActionButtonEvent(actionType: actionTypes) {
-        const result = doMath(actionType, parseFloat(this.display.innerHTML));
-        this.#updateDisplay(isNanOrInfinity(result) ? 'error' : result.toString());
-        this.#resetFontSize();
+        const result = doMath(actionType, this.displayValue);
+        this.display.updateDisplay(isNanOrInfinity(result) ? 'error' : result.toString());
+        this.displayValue = result;
+        console.log(this.displayValue);
+        this.display.resetFontSize();
 
         if (actionType !== actionTypes.NEGATE) {
             this.actionType = actionType;
@@ -142,99 +99,76 @@ export default class Calculator {
     }
 
     #equalsButtonEvent() {
-        if (this.totalValue !== 0) {
-            const result = doMath(this.actionType, this.totalValue, parseFloat(this.display.innerHTML));
-            this.#updateDisplay(isNanOrInfinity(result) ? 'error' : result.toString());
+        if (this.subTotalValue) {
+            const result = doMath(this.actionType, this.subTotalValue, this.displayValue);
+            this.display.updateDisplay(isNanOrInfinity(result) ? 'error' : result.toString());
+            this.displayValue = result;
         }
         this.actionType = actionTypes.EQUALS;
-        this.subTotalDisplay.innerHTML = '';
-        this.operationSymbol.innerHTML = '';
-        this.totalValue = 0;
-        this.#resetFontSize();
+        this.display.updateSubTotalDisplay('');
+        this.display.updateOperationSymbol('');
+        this.subTotalValue = 0;
+        this.display.resetFontSize();
     }
 
     #clearButtonEvent(isClearAll: boolean) {
-        this.#updateDisplay('0');
-        this.#resetFontSize();
+        this.display.updateDisplay('0');
+        this.displayValue = 0;
+        this.display.resetFontSize();
 
         if(isClearAll){
-            this.subTotalDisplay.innerHTML = '';
-            this.operationSymbol.innerHTML = '';
-            this.memoryDisplay.innerHTML = '';
-            this.totalValue = 0;
+            this.display.updateSubTotalDisplay('');
+            this.display.updateOperationSymbol('');
+            this.display.updateMemoryDisplay('');
+            this.subTotalValue = 0;
+            this.memoryValue = 0;
             this.actionType = actionTypes.UNKNOWN;
         }
     }
 
-    #memoryAddremoveButtonEvent() {
-        if (this.memoryDisplay.innerHTML === '' || this.display.innerHTML !== '0') {
-            this.memoryDisplay.innerHTML = `M ${parseFloat(this.display.innerHTML)}`;
-            this.#updateDisplay('0');
-            this.#resetFontSize();
+    #memoryAddRemoveButtonEvent() {
+        if (this.memoryValue === 0 || this.displayValue !== 0) {
+            console.log('here');
+            this.display.updateMemoryDisplay(this.displayValue.toString());
+            this.display.updateDisplay('0');
+            this.memoryValue = this.displayValue;
+            this.displayValue = 0;
+            this.display.resetFontSize();
             return;
         }
 
-        this.memoryDisplay.innerHTML = '';
+        this.display.updateMemoryDisplay('');
+        this.display.updateMemoryDisplay('')
+        this.memoryValue = 0
     }
 
     #memoryRecallButtonEvent() {
-        if (this.memoryDisplay.innerHTML === '') {
+        if (this.memoryValue === 0) {
             return;
         }
 
-        const memoryValue = this.memoryDisplay.innerHTML.split(' ')[1];
-        this.#updateDisplay(memoryValue);
-        this.#setFontSizeScale();
-    }
-
-    #updateDisplay(value: string) {
-        this.display.innerHTML = value;
-    }
-
-    #handelSubTotalAndDisplay(actionType: actionTypes) {
-        if (this.totalValue && this.display.innerHTML !== '0') {
-            this.totalValue = doMath(this.actionType, this.totalValue, parseFloat(this.display.innerHTML));
-        } else if (!this.totalValue && this.display.innerHTML !== '0') {
-            this.totalValue = parseFloat(this.display.innerHTML);
-        }
-
-        this.actionType = actionType;
-        this.subTotalDisplay.innerHTML = this.totalValue.toString();
-        this.operationSymbol.innerHTML = getOperationSymbol(this.actionType);
-        this.#updateDisplay('0');
-    }
-
-    #setFontSizeScale() {
-        if (isTooWideDisplayValue(this.display.offsetWidth, this.#displayContainer.offsetWidth)) {
-            this.#fontSize = (this.#displayContainer.offsetWidth / (this.display.offsetWidth + 40)) * this.#fontSize;
-            scaleElementFontSizeAndLineHeight(this.display, this.#fontSize);
-        }
-    }
-
-    #resetFontSize() {
-        this.#fontSize = 3;
-        scaleElementFontSizeAndLineHeight(this.display, this.#fontSize);
-        this.#setFontSizeScale();
+        this.displayValue = this.memoryValue;
+        this.display.updateDisplay(this.memoryValue.toString());
     }
 
     #initCalculatorEventHandling() {
-        Array.from(this.numberButtons).forEach((btn: Element) => {
+        Array.from(this.buttons.numberButtons).forEach((btn: Element) => {
             btn.addEventListener('click', () => {
                 this.#buttonEvent(btn);
             });
         });
 
         const actionButtonAndAction: ButtonAndAction[] = [{
-            button: this.addButton,
+            button: this.buttons.addButton,
             action: actionTypes.ADD,
         }, {
-            button: this.subtractButton,
+            button: this.buttons.subtractButton,
             action: actionTypes.SUBTRACT,
         }, {
-            button: this.divideButton,
+            button: this.buttons.divideButton,
             action: actionTypes.DIVIDE,
         }, {
-            button: this.multiplyButton,
+            button: this.buttons.multiplyButton,
             action: actionTypes.MULTIPLY,
         }];
 
@@ -245,16 +179,16 @@ export default class Calculator {
         });
 
         const secondaryActionButtonsAndActions: ButtonAndAction[] = [{
-            button: this.negateButton,
+            button: this.buttons.negateButton,
             action: actionTypes.NEGATE,
         }, {
-            button: this.percentageButton,
+            button: this.buttons.percentageButton,
             action: actionTypes.PERCENTAGE,
         }, {
-            button: this.squareRootButton,
+            button: this.buttons.squareRootButton,
             action: actionTypes.SQUARE_ROOT,
         }, {
-            button: this.squareButton,
+            button: this.buttons.squareButton,
             action: actionTypes.SQUARE,
         }]
 
@@ -264,29 +198,29 @@ export default class Calculator {
             });
         });
 
-        this.equalsButton.addEventListener('click', () => {
+        this.buttons.equalsButton.addEventListener('click', () => {
             this.#equalsButtonEvent();
         });
 
 
-        [this.clearAllButton, this.clearButton].forEach((button, index) => {
+        [this.buttons.clearAllButton, this.buttons.clearButton].forEach((button, index) => {
             button.addEventListener('click', () => {
                 this.#clearButtonEvent(index === 0);
             });
         });
 
-        this.memoryAddremoveButton.addEventListener('click', () => {
-            this.#memoryAddremoveButtonEvent();
+        this.buttons.memoryAddremoveButton.addEventListener('click', () => {
+            this.#memoryAddRemoveButtonEvent();
         });
 
-        this.memoryRecallButton.addEventListener('click', () => {
+        this.buttons.memoryRecallButton.addEventListener('click', () => {
             this.#memoryRecallButtonEvent();
         });
 
         window.addEventListener('keydown', (e) => {
             if (numberButtonKeyCodes.includes(e.code)) {
                 const btn =
-                    Array.from(this.numberButtons).find((b) => b.innerHTML === e.key);
+                    Array.from(this.buttons.numberButtons).find((b) => b.innerHTML === e.key);
                 if (btn) {
                     this.#buttonEvent(btn);
                 }

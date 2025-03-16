@@ -16,117 +16,117 @@ describe('Calculator', () => {
     });
 
     it('should initialize with default values', () => {
-        expect(calculator.display.innerHTML).toBe('0');
-        expect(calculator.totalValue).toBe(0);
+        expect(calculator.displayValue).toBe(0);
+        expect(calculator.subTotalValue).toBe(0);
         expect(calculator.actionType).toBe(actionTypes.UNKNOWN);
     });
 
     it('should update display when number button is clicked', async () => {
-        calculator.numberButtons[0].dispatchEvent(new MouseEvent('click'));
-        expect(calculator.display.innerHTML).toBe('7');
+        calculator.buttons.numberButtons[0].dispatchEvent(new MouseEvent('click'));
+        expect(calculator.displayValue).toBe(7);
     });
 
     it('should perform addition correctly', () => {
-        calculator.totalValue = 5;
-        calculator.addButton.click();
-        calculator.display.innerHTML = '3';
-        calculator.equalsButton.click();
-        expect(calculator.display.innerHTML).toBe('8');
+        calculator.subTotalValue = 5;
+        calculator.buttons.addButton.click();
+        calculator.displayValue = 3;
+        calculator.buttons.equalsButton.click();
+        expect(calculator.displayValue).toBe(8);
     });
 
     it('should perform subtraction correctly', () => {
-        calculator.totalValue = 5;
-        calculator.subtractButton.click();
-        calculator.display.innerHTML = '3';
-        calculator.equalsButton.click();
-        expect(calculator.display.innerHTML).toBe('2');
+        calculator.subTotalValue = 5;
+        calculator.buttons.subtractButton.click();
+        calculator.displayValue = 3;
+        calculator.buttons.equalsButton.click();
+        expect(calculator.displayValue).toBe(2);
     });
 
     it('should perform division correctly', () => {
-        calculator.totalValue = 6;
-        calculator.divideButton.click();
-        calculator.display.innerHTML = '3';
-        calculator.equalsButton.click();
-        expect(calculator.display.innerHTML).toBe('2');
+        calculator.subTotalValue = 6;
+        calculator.buttons.divideButton.click();
+        calculator.displayValue = 3;
+        calculator.buttons.equalsButton.click();
+        expect(calculator.displayValue).toBe(2);
     });
 
     it('should perform multiplication correctly', () => {
-        calculator.totalValue = 5;
-        calculator.multiplyButton.click();
-        calculator.display.innerHTML = '3';
-        calculator.equalsButton.click();
-        expect(calculator.display.innerHTML).toBe('15');
+        calculator.subTotalValue = 5;
+        calculator.buttons.multiplyButton.click();
+        calculator.displayValue = 3;
+        calculator.buttons.equalsButton.click();
+        expect(calculator.displayValue).toBe(15);
     });
 
     it('should negate the number correctly', () => {
-        calculator.display.innerHTML = '5';
-        calculator.negateButton.click();
-        expect(calculator.display.innerHTML).toBe('-5');
+        calculator.displayValue = 5;
+        calculator.buttons.negateButton.click();
+        expect(calculator.displayValue).toBe(-5);
     })
 
     it('should calculate percentage correctly', () => {
-        calculator.display.innerHTML = '5';
-        calculator.percentageButton.click();
-        expect(calculator.display.innerHTML).toBe('0.05');
+        calculator.displayValue = 5;
+        calculator.buttons.percentageButton.click();
+        expect(calculator.displayValue).toBe(0.05);
     })
 
     it('should calculate square root correctly', () => {
-        calculator.display.innerHTML = '25';
-        calculator.squareRootButton.click();
-        expect(calculator.display.innerHTML).toBe('5');
+        calculator.displayValue = 25;
+        calculator.buttons.squareRootButton.click();
+        expect(calculator.displayValue).toBe(5);
     })
 
     it('should calculate square correctly', () => {
-        calculator.display.innerHTML = '5';
-        calculator.squareButton.click();
-        expect(calculator.display.innerHTML).toBe('25');
+        calculator.displayValue = 5;
+        calculator.buttons.squareButton.click();
+        expect(calculator.displayValue).toBe(25);
     })
 
     it('should correctly show sub-total after operator click', () => {
-        calculator.display.innerHTML = '5';
-        calculator.addButton.click();
-        expect(calculator.subTotalDisplay.innerHTML).toBe('5');
+        calculator.displayValue = 5;
+        calculator.buttons.addButton.click();
+        expect(calculator.subTotalValue).toBe(5);
     });
 
     it('should correctly show operator symbol after click', () => {
-        calculator.totalValue = 5;
-        calculator.addButton.click();
-        expect(calculator.operationSymbol.innerHTML).toBe('+');
+        calculator.subTotalValue = 5;
+        calculator.buttons.addButton.click();
+        expect(calculator.display.getOperationSymbol()).toBe('+');
     });
 
     it('should clear display and reset values when clear button is clicked', () => {
-        calculator.display.innerHTML = '5';
-        calculator.clearButton.click();
-        expect(calculator.display.innerHTML).toBe('0');
-        expect(calculator.totalValue).toBe(0);
+        calculator.displayValue = 5;
+        calculator.buttons.clearButton.click();
+        expect(calculator.displayValue).toBe(0);
+        expect(calculator.subTotalValue).toBe(0);
         expect(calculator.actionType).toBe(actionTypes.UNKNOWN);
     });
 
     it('should clear all and reset values when clear all button is clicked', () => {
-        calculator.totalValue = 10;
-        calculator.display.innerHTML = '5';
-        calculator.memoryDisplay.innerHTML = 'M 5';
-        calculator.operationSymbol.innerHTML = '+';
+        calculator.subTotalValue = 10;
+        calculator.displayValue = 5;
+        calculator.memoryValue = 1;
+        calculator.buttons.addButton.click();
         calculator.actionType = actionTypes.ADD;
-        calculator.clearAllButton.click();
-        expect(calculator.display.innerHTML).toBe('0');
-        expect(calculator.totalValue).toBe(0);
-        expect(calculator.memoryDisplay.innerHTML).toBe('');
-        expect(calculator.operationSymbol.innerHTML).toBe('');
+        calculator.buttons.clearAllButton.click();
+        expect(calculator.displayValue).toBe(0);
+        expect(calculator.subTotalValue).toBe(0);
+        expect(calculator.memoryValue).toBe(0);
+        expect(calculator.display.getOperationSymbol()).toBe('');
         expect(calculator.actionType).toBe(actionTypes.UNKNOWN);
     });
 
     it('should handle memory add/remove correctly', () => {
-        calculator.display.innerHTML = '5';
-        calculator.memoryAddremoveButton.click();
-        expect(calculator.memoryDisplay.innerHTML).toBe('M 5');
-        calculator.memoryAddremoveButton.click();
-        expect(calculator.memoryDisplay.innerHTML).toBe('');
+        calculator.displayValue = 5;
+        calculator.buttons.memoryAddremoveButton.click();
+        expect(calculator.memoryValue).toBe(5);
+        calculator.buttons.memoryAddremoveButton.click();
+        expect(calculator.memoryValue).toBe(0);
     });
 
     it('should recall memory correctly', () => {
-        calculator.memoryDisplay.innerHTML = 'M 5';
-        calculator.memoryRecallButton.click();
-        expect(calculator.display.innerHTML).toBe('5');
+        calculator.memoryValue = 5;
+        calculator.buttons.memoryRecallButton.click();
+        expect(calculator.displayValue).toBe(5);
     });
 });

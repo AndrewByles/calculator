@@ -2,14 +2,16 @@ import {buttonsContainer, calculatorContainer, displayContainer} from './element
 import {actionTypes, ButtonAndAction} from './button-types.ts';
 import {doMath, isNanOrInfinity} from './math.ts';
 import {
-    actionButtonKeyCodes, getActionTypeFromKeyCode,
+    actionButtonKeyCodes,
+    getActionTypeFromKeyCode,
     getOperationSymbol,
     numberButtonKeyCodes,
 } from './utils.ts';
 
-import './styles/calculator.css'
 import {Display} from "./display.ts";
 import {Buttons} from "./buttons.ts";
+
+import './styles/calculator.css';
 
 export default class Calculator {
     #calculator: HTMLElement;
@@ -90,7 +92,6 @@ export default class Calculator {
         const result = doMath(actionType, this.displayValue);
         this.display.updateDisplay(isNanOrInfinity(result) ? 'error' : result.toString());
         this.displayValue = result;
-        console.log(this.displayValue);
         this.display.resetFontSize();
 
         if (actionType !== actionTypes.NEGATE) {
@@ -128,7 +129,6 @@ export default class Calculator {
 
     #memoryAddRemoveButtonEvent() {
         if (this.memoryValue === 0 || this.displayValue !== 0) {
-            console.log('here');
             this.display.updateMemoryDisplay(this.displayValue.toString());
             this.display.updateDisplay('0');
             this.memoryValue = this.displayValue;

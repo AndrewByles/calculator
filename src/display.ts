@@ -46,10 +46,6 @@ export class Display {
         return this.#operationSymbol.innerHTML;
     }
 
-    getMemoryDisplayValue() {
-        return this.#memoryDisplay.innerHTML;
-    }
-
     updateMemoryDisplay(value: string) {
         this.#memoryDisplay.innerHTML = value.length ? 'M ' + value : value;
     }

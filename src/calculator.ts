@@ -63,7 +63,7 @@ export default class Calculator {
             return;
         }
 
-        if (this.displayValue === 0 || isNanOrInfinity(this.displayValue)) {
+        if (!isAlreadyDecimal && (this.displayValue === 0 || isNanOrInfinity(this.displayValue))) {
             this.displayValue = parseFloat(button.innerHTML);
             this.display.updateDisplay(button.innerHTML);
             return;
